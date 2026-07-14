@@ -23,73 +23,65 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
       - name: Configure Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-
       - name: Install shared Electron build tools
         run: npm ci
-
       - name: Install Test Lab package
         working-directory: test-lab
         run: npm ci
-
-      - name: Validate Test Lab
+      - name: Validate required screens and functions
         working-directory: test-lab
         run: npm run validate
-
-      - name: Run Test Lab tests
+      - name: Run unit and persistence tests
         working-directory: test-lab
         run: npm test
-
+      - name: Run Passed and Failed acceptance simulations
+        working-directory: test-lab
+        run: npm run acceptance
       - name: Build Installer, Portable and ZIP
         working-directory: test-lab
         run: npm run build:win
-
       - name: Verify build outputs
         shell: pwsh
         run: |
           $installer = Get-ChildItem test-lab\release -Filter "*-Installer.exe" -File
           $portable = Get-ChildItem test-lab\release -Filter "*-Portable.exe" -File
           $zip = Get-ChildItem test-lab\release -Filter "*.zip" -File
-          if (-not $installer) { throw "Installer EXE was not generated" }
-          if (-not $portable) { throw "Portable EXE was not generated" }
-          if (-not $zip) { throw "ZIP was not generated" }
+          if (-not $installer -or ($installer | Where-Object Length -le 0)) { throw "Installer EXE was not generated correctly" }
+          if (-not $portable -or ($portable | Where-Object Length -le 0)) { throw "Portable EXE was not generated correctly" }
+          if (-not $zip -or ($zip | Where-Object Length -le 0)) { throw "ZIP was not generated correctly" }
           Get-ChildItem test-lab\release -File | Format-Table Name, Length
-
       - name: Upload Test Lab Installer
         uses: actions/upload-artifact@v4
         with:
-          name: Nexa-Test-Lab-1.1.0-Installer
+          name: Nexa-Test-Lab-1.0.0-Installer
           path: |
             test-lab/release/*-Installer.exe
             test-lab/release/*.blockmap
           if-no-files-found: error
           retention-days: 30
-
       - name: Upload Test Lab Portable
         uses: actions/upload-artifact@v4
         with:
-          name: Nexa-Test-Lab-1.1.0-Portable
+          name: Nexa-Test-Lab-1.0.0-Portable
           path: test-lab/release/*-Portable.exe
           if-no-files-found: error
           retention-days: 30
-
       - name: Upload Test Lab ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Nexa-Test-Lab-1.1.0-ZIP
+          name: Nexa-Test-Lab-1.0.0-ZIP
           path: test-lab/release/*.zip
           if-no-files-found: error
           retention-days: 30
-
       - name: Upload diagnostic output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Nexa-Test-Lab-Build-Diagnostics
+          name: Nexa-Test-Lab-1.0.0-Build-Diagnostics
           path: |
             test-lab/release/builder-debug.yml
             test-lab/release/builder-effective-config.yaml

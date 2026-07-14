@@ -1,7 +1,7 @@
 {
   "name": "nexa-test-lab",
-  "version": "1.1.0",
-  "description": "Secure local artifact test laboratory for Nexa App Builder Pro",
+  "version": "1.0.0",
+  "description": "Independent Windows artifact validation laboratory",
   "main": "main.js",
   "author": "Nexa App Builder Pro",
   "license": "UNLICENSED",
@@ -10,37 +10,25 @@
     "start": "node ../node_modules/electron/cli.js .",
     "validate": "node scripts/validate.js",
     "test": "node --test tests/*.test.js",
-    "build:win": "npm run validate && npm test && node ../node_modules/electron-builder/cli.js --win nsis portable zip --publish never"
+    "acceptance": "node --test tests/acceptance.test.js",
+    "build:win": "npm run validate && npm test && npm run acceptance && node ../node_modules/electron-builder/cli.js --win nsis portable zip --publish never"
   },
   "build": {
     "appId": "com.nexa.testlab",
     "productName": "Nexa Test Lab",
     "electronVersion": "43.1.0",
-    "directories": {
-      "output": "release"
-    },
+    "directories": { "output": "release" },
     "files": [
-      "main.js",
-      "preload.js",
-      "core/**/*",
-      "providers/**/*",
-      "automation/**/*",
-      "reports/**/*",
-      "screenshots/**/*",
-      "logs/**/*",
-      "recordings/**/*",
-      "config/**/*",
-      "fixtures/**/*",
-      "src/**/*",
-      "package.json"
+      "main.js", "preload.js", "core/**/*", "providers/**/*", "automation/**/*",
+      "reports/**/*", "screenshots/**/*", "logs/**/*", "recordings/**/*",
+      "config/**/*", "fixtures/**/*", "src/**/*", "package.json"
     ],
     "win": {
       "target": [
         { "target": "nsis", "arch": ["x64"] },
         { "target": "portable", "arch": ["x64"] },
         { "target": "zip", "arch": ["x64"] }
-      ],
-      "artifactName": "${productName}-${version}-${arch}-${name}.${ext}"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -50,11 +38,7 @@
       "shortcutName": "Nexa Test Lab",
       "artifactName": "${productName}-${version}-${arch}-Installer.${ext}"
     },
-    "portable": {
-      "artifactName": "${productName}-${version}-${arch}-Portable.${ext}"
-    },
-    "zip": {
-      "artifactName": "${productName}-${version}-${arch}-ZIP.${ext}"
-    }
+    "portable": { "artifactName": "${productName}-${version}-${arch}-Portable.${ext}" },
+    "zip": { "artifactName": "${productName}-${version}-${arch}-ZIP.${ext}" }
   }
 }
