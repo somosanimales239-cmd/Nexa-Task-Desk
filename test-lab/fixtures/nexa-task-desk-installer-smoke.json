@@ -1,0 +1,16 @@
+{
+  "name": "Nexa Task Desk Installer Wizard Smoke Test",
+  "application": "Nexa Task Desk",
+  "version": "1.0.1",
+  "platform": "windows",
+  "artifactType": "installer",
+  "steps": [
+    { "action": "install", "timeoutMs": 30000 },
+    { "action": "wait_for_window", "title_contains": "Nexa Task Desk", "timeoutMs": 30000 },
+    { "action": "assertProcessRunning" },
+    { "action": "screenshot" },
+    { "action": "assertNoCrash" },
+    { "action": "close", "timeoutMs": 5000 },
+    { "action": "cleanup" }
+  ]
+}

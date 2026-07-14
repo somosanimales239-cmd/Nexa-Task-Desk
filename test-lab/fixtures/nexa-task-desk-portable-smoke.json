@@ -1,0 +1,17 @@
+{
+  "name": "Nexa Task Desk Portable Smoke Test",
+  "application": "Nexa Task Desk",
+  "version": "1.0.1",
+  "platform": "windows",
+  "artifactType": "portable",
+  "steps": [
+    { "action": "launch", "timeoutMs": 30000 },
+    { "action": "wait_for_window", "title_contains": "Nexa Task Desk", "timeoutMs": 30000 },
+    { "action": "assertProcessRunning" },
+    { "action": "wait", "durationMs": 5000 },
+    { "action": "screenshot" },
+    { "action": "assertNoCrash" },
+    { "action": "close", "timeoutMs": 5000 },
+    { "action": "cleanup" }
+  ]
+}

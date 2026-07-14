@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexa.local/schemas/test-profile.schema.json",
+  "title": "Nexa Test Lab Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "platform", "artifactType", "steps"],
+  "properties": {
+    "name": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "application": { "type": "string", "maxLength": 120 },
+    "version": { "type": "string", "maxLength": 40 },
+    "platform": { "enum": ["windows", "android", "linux", "web", "pwa", "docker", "api", "service", "macos-remote"] },
+    "artifactType": { "enum": ["portable", "installer"] },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action"],
+        "properties": {
+          "action": { "enum": ["launch", "install", "uninstall", "click", "type", "wait", "wait_for_window", "assertVisible", "assertText", "assertProcessRunning", "assertFileExists", "assertNoCrash", "screenshot", "capture_screenshot", "videoStart", "videoStop", "logCapture", "close", "cleanup"] },
+          "required": { "type": "boolean" },
+          "timeoutMs": { "type": "integer", "minimum": 250, "maximum": 600000 },
+          "durationMs": { "type": "integer", "minimum": 250, "maximum": 600000 },
+          "title_contains": { "type": "string", "maxLength": 120 }
+        }
+      }
+    }
+  }
+}

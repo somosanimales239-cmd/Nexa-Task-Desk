@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Nexa Test Lab</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">N</span><div><strong>Nexa Test Lab</strong><small>Windows Pilot · 1.1.0</small></div></div>
+      <span id="statusBadge" class="badge idle">Idle</span>
+    </header>
+
+    <section class="intro card">
+      <div><span class="eyebrow">SAFE LOCAL ARTIFACT TESTING</span><h1>Validate builds before delivery.</h1><p>Select an artifact, choose a profile, prepare the environment, start the test, watch progress and review the report.</p></div>
+      <ol><li>Select an artifact</li><li>Select a test profile</li><li>Prepare environment</li><li>Start test</li><li>Watch progress</li><li>Review result</li></ol>
+    </section>
+
+    <section class="workspace">
+      <div class="card controls">
+        <h2>Test configuration</h2>
+        <label>Platform<select id="platform"><option value="windows">Windows</option><option value="android">Android · simulated</option><option value="linux">Linux · simulated</option><option value="web">Web · planned</option><option value="pwa">PWA · planned</option><option value="docker">Docker · planned</option><option value="api">API · planned</option><option value="service">Service · planned</option><option value="macos-remote">macOS Remote · planned</option></select></label>
+        <label>Artifact<div class="file-row"><input id="artifactPath" readonly placeholder="Select a local artifact"><button id="selectArtifact" type="button">Select Artifact</button></div></label>
+        <div id="artifactMeta" class="meta">No artifact selected.</div>
+        <label>Expected SHA-256 <input id="expectedSha" maxlength="64" placeholder="Optional integrity check"></label>
+        <label>Test Profile<select id="profile"></select></label>
+        <div class="environment"><strong>Environment Status</strong><p id="environmentStatus">Checking environment…</p><button id="refreshEnvironment" class="secondary" type="button">Test again</button></div>
+        <div class="button-row"><button id="startTest" type="button" disabled>Start Test</button><button id="stopTest" class="danger" type="button" disabled>Stop Test</button></div>
+      </div>
+
+      <div class="card execution">
+        <div class="section-head"><h2>Current execution</h2><span id="testId">No active test</span></div>
+        <div class="progress"><span id="progressBar"></span></div>
+        <ol id="timeline" class="timeline"><li class="muted">Waiting for a test.</li></ol>
+        <h3>Console</h3><pre id="console" aria-live="polite">Nexa Test Lab is ready.</pre>
+        <h3>Screenshots</h3><div id="screenshots" class="screenshots"><p class="muted">No captures available.</p></div>
+      </div>
+    </section>
+
+    <section class="card history-card">
+      <div class="section-head"><h2>Test history</h2><input id="historySearch" type="search" placeholder="Search application, platform or result"></div>
+      <div class="table-wrap"><table><thead><tr><th>Application</th><th>Platform</th><th>Result</th><th>Date</th><th>Duration</th><th>Actions</th></tr></thead><tbody id="history"></tbody></table></div>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
