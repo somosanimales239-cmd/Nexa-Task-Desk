@@ -1,0 +1,58 @@
+{
+  "name": "nexa-desktop-app",
+  "version": "1.0.0",
+  "description": "Desktop application managed by Nexa App Builder Pro",
+  "main": "main.js",
+  "author": "Nexa App Builder Pro",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "validate": "node --check main.js && node --check preload.js && node --check src/app.js",
+    "build:win": "npm run validate && electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "43.1.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.nexa.desktopapp",
+    "productName": "Nexa Desktop App",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Nexa Desktop App",
+      "artifactName": "${productName}-${version}-${arch}-Installer.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${arch}-Portable.${ext}"
+    }
+  }
+}

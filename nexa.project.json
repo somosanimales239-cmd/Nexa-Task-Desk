@@ -1,0 +1,14 @@
+{
+    "name": "Nexa Task Desk",
+    "slug": "project-20260714-124904",
+    "uuid": "93b76a46-997c-4b56-85b6-e859c674f6c5",
+    "type": "electron",
+    "version": "1.0.0",
+    "managed_by": "Nexa App Builder Pro",
+    "created_at": "2026-07-14 12:49:04",
+    "rules": {
+        "modify_only_necessary_files": true,
+        "backup_before_changes": true,
+        "rollback_enabled": true
+    }
+}

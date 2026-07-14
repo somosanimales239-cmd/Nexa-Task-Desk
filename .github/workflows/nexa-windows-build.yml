@@ -1,0 +1,106 @@
+name: Nexa Windows Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      nexa_version:
+        description: Nexa project version
+        required: false
+        default: manual
+      nexa_build_id:
+        description: Nexa build record ID
+        required: false
+        default: "0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexa-windows-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-and-build:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      CI: "true"
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Apply Nexa version
+        shell: pwsh
+        run: |
+          $version = "${{ inputs.nexa_version }}"
+          if ($version -match "^\d+\.\d+\.\d+([+-][0-9A-Za-z.-]+)?$") {
+            npm version $version --no-git-tag-version --allow-same-version
+          }
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          if (Test-Path package-lock.json) {
+            npm ci
+          } else {
+            npm install
+          }
+
+      - name: Validate source
+        run: npm run validate
+
+      - name: Build installer and portable app
+        run: npm run build:win
+
+      - name: Create Windows ZIP package
+        shell: pwsh
+        run: |
+          if (-not (Test-Path release\win-unpacked)) { throw "win-unpacked directory was not created" }
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          $productName = [string]$package.build.productName
+          if ([string]::IsNullOrWhiteSpace($productName)) { $productName = [string]$package.name }
+          $safeName = ($productName -replace '[^0-9A-Za-z._-]+', '-').Trim('-')
+          $version = [string]$package.version
+          $zipPath = "release\$safeName-$version-x64-ZIP.zip"
+          Compress-Archive -Path release\win-unpacked\* -DestinationPath $zipPath -CompressionLevel Optimal -Force
+          if (-not (Test-Path $zipPath)) { throw "ZIP package was not created" }
+
+      - name: Verify build output
+        shell: pwsh
+        run: |
+          if (-not (Test-Path release)) { throw "release directory was not created" }
+          $files = Get-ChildItem release -File -Recurse
+          if ($files.Count -eq 0) { throw "No build artifacts were generated" }
+          $files | Format-Table FullName, Length
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-Installer-${{ inputs.nexa_version }}-Build-${{ inputs.nexa_build_id }}
+          path: |
+            release/**/*-Installer.exe
+            release/**/*.blockmap
+            release/**/*.yml
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload portable Windows app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-Portable-${{ inputs.nexa_version }}-Build-${{ inputs.nexa_build_id }}
+          path: release/**/*-Portable.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Windows ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-ZIP-${{ inputs.nexa_version }}-Build-${{ inputs.nexa_build_id }}
+          path: release/**/*-ZIP.zip
+          if-no-files-found: error
+          retention-days: 30

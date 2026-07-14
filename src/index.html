@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:;">
+  <title>Nexa Desktop App</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">N</span><span>Nexa Desktop App</span></div>
+      <span class="status"><i></i> Ready</span>
+    </header>
+    <section class="hero">
+      <span class="eyebrow">BUILT WITH NEXA APP BUILDER PRO</span>
+      <h1>Your Windows application is ready to evolve.</h1>
+      <p>Describe the next feature in Nexa. The engineering agent will analyze, plan, modify, validate and compile it through GitHub Actions.</p>
+      <div class="actions">
+        <button id="checkButton" type="button">Run local check</button>
+        <span id="result" aria-live="polite"></span>
+      </div>
+    </section>
+    <section class="grid">
+      <article><span>01</span><h2>Secure foundation</h2><p>Context isolation, sandboxing and a restrictive content policy are enabled.</p></article>
+      <article><span>02</span><h2>Professional builds</h2><p>Installer, portable executable and ZIP targets are preconfigured.</p></article>
+      <article><span>03</span><h2>Version controlled</h2><p>Every change can be reviewed, compiled and rolled back through Nexa.</p></article>
+    </section>
+    <footer><span>Version 1.0.0</span><span id="runtime">Loading runtime…</span></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
