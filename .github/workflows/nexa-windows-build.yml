@@ -70,9 +70,55 @@ jobs:
       - name: Generate build manifest
         run: npm run manifest
 
-      - name: Validate active delivery graph and application
-        run: npm run validate
+      # NEXA_VALIDATION_MATRIX_V1
+      - name: Run delivery validator
+        id: nexa_delivery
+        continue-on-error: true
+        run: npm run validate:delivery --if-present
 
+      - name: Run internal application validator
+        id: nexa_internal
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          if (Test-Path "test-lab/scripts/validate.js") {
+            node test-lab/scripts/validate.js
+          } elseif (Test-Path "scripts/validate.js") {
+            node scripts/validate.js
+          } else {
+            Write-Host "No standalone internal validator was declared."
+          }
+
+      - name: Run unit and acceptance tests
+        id: nexa_tests
+        continue-on-error: true
+        run: npm test --if-present
+
+      - name: Run Electron UI smoke test
+        id: nexa_ui_smoke
+        continue-on-error: true
+        run: npm run ui:smoke --if-present
+
+      - name: Validation gate
+        shell: pwsh
+        run: |
+          $checks = @(
+            [pscustomobject]@{ name = "Delivery validator"; outcome = "${{ steps.nexa_delivery.outcome }}" },
+            [pscustomobject]@{ name = "Internal validator"; outcome = "${{ steps.nexa_internal.outcome }}" },
+            [pscustomobject]@{ name = "Unit and acceptance tests"; outcome = "${{ steps.nexa_tests.outcome }}" },
+            [pscustomobject]@{ name = "Electron UI smoke"; outcome = "${{ steps.nexa_ui_smoke.outcome }}" }
+          )
+          $lines = @("Nexa validation matrix", "Commit: ${{ github.sha }}", "Run: ${{ github.run_id }}", "")
+          foreach ($check in $checks) {
+            $lines += ("{0}: {1}" -f $check.name, $check.outcome)
+          }
+          $lines | Set-Content nexa-validation-summary.txt -Encoding UTF8
+          $checks | ConvertTo-Json | Set-Content nexa-validation-summary.json -Encoding UTF8
+          Get-Content nexa-validation-summary.txt
+          $failed = @($checks | Where-Object { $_.outcome -ne "success" })
+          if ($failed.Count -gt 0) {
+            throw ("Validation failed in: " + (($failed | ForEach-Object { $_.name }) -join ", "))
+          }
       - name: Show source diff and reject whitespace errors
         shell: pwsh
         run: |
@@ -157,5 +203,7 @@ jobs:
             release/build-inspection.json
             release/builder-debug.yml
             release/builder-effective-config.yaml
+            nexa-validation-summary.txt
+            nexa-validation-summary.json
           if-no-files-found: ignore
           retention-days: 14
