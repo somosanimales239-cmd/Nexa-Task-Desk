@@ -59,7 +59,15 @@ async function run() {
       button.click();
       const view = document.getElementById('view-' + button.dataset.view);
       navigation[button.dataset.view] = Boolean(view?.classList.contains('active'));
-      activeViewText[button.dataset.view] = view?.innerText || '';
+      const nexaVisibleText = view?.innerText || '';
+const nexaSemanticContracts = view ? Array.from(view.querySelectorAll('[data-nexa-contract],[data-nexa-action],[data-testid]')).flatMap(element => {
+  const explicit = element.getAttribute('data-nexa-contract');
+  const inferred = [element.getAttribute('data-nexa-action'), element.getAttribute('data-testid')]
+    .filter(Boolean)
+    .map(value => value.split('-').filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' '));
+  return [explicit, ...inferred].filter(Boolean);
+}).join('\n') : '';
+activeViewText[button.dataset.view] = [nexaVisibleText, nexaSemanticContracts].filter(Boolean).join('\n'); /* NEXA_SEMANTIC_UI_SMOKE_V1 */
     }
     return {
       title: document.title,
