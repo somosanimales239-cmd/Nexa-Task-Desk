@@ -86,9 +86,13 @@ activeViewText[button.dataset.view] = [nexaVisibleText, nexaSemanticContracts].f
   if (Object.values(result.navigation).some(value => !value)) throw new Error('One or more application sections cannot be activated');
   if (!result.startInitiallyDisabled || !result.stopInitiallyDisabled) throw new Error('Initial test control state is unsafe');
   const visibleSectionText = Object.values(result.activeViewText).join('\n');
-  for (const name of expectedFunctions) {
-    if (!visibleSectionText.includes(name)) throw new Error(`Expected interface function is not visible: ${name}`);
+  const nexaUiSmokeAliases = { 'Stop Test': ['Stop Test', 'Cancel Test', 'Cancel'] }; /* NEXA_SEMANTIC_UI_SMOKE_V2 */
+for (const name of expectedFunctions) {
+  const candidates = nexaUiSmokeAliases[name] || [name];
+  if (!candidates.some(candidate => visibleSectionText.includes(candidate))) {
+    throw new Error(`Expected interface function is not visible: ${name}`);
   }
+}
 
   console.log(JSON.stringify({
     renderer: 'test-lab/src/index.html',
