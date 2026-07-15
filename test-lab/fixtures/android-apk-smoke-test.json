@@ -1,0 +1,27 @@
+{
+  "name": "Android APK Smoke Test",
+  "application": "Android APK",
+  "version": "unknown",
+  "platform": "android",
+  "artifactType": "apk",
+  "uninstallAfterTest": true,
+  "shutdownEmulator": false,
+  "steps": [
+    { "action": "validateArtifact", "required": true },
+    { "action": "confirmEnvironment", "required": true },
+    { "action": "startEmulator", "required": true },
+    { "action": "waitForBoot", "required": true, "timeoutMs": 120000 },
+    { "action": "install", "required": true, "timeoutMs": 120000 },
+    { "action": "launchApplication", "required": true },
+    { "action": "assertProcessRunning", "required": true },
+    { "action": "wait", "required": true, "durationMs": 15000 },
+    { "action": "screenshot", "required": true },
+    { "action": "logCapture", "required": true },
+    { "action": "assertNoCrash", "required": true },
+    { "action": "assertNoAnr", "required": true },
+    { "action": "stopApplication", "required": true },
+    { "action": "relaunch", "required": true },
+    { "action": "assertProcessRunning", "required": true },
+    { "action": "cleanup", "required": true }
+  ]
+}
