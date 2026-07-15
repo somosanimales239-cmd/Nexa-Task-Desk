@@ -1,6 +1,6 @@
 {
   "name": "nexa-test-lab",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Secure Windows artifact validation laboratory",
   "main": "test-lab/main.js",
   "author": "Nexa App Builder Pro",

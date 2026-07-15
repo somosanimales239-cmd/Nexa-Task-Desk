@@ -3,7 +3,7 @@
     "slug": "project-20260714-124904",
     "uuid": "93b76a46-997c-4b56-85b6-e859c674f6c5",
     "type": "electron",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "managed_by": "Nexa App Builder Pro",
     "created_at": "2026-07-14 12:49:04",
     "rules": {
@@ -11,5 +11,5 @@
         "backup_before_changes": true,
         "rollback_enabled": true
     },
-    "updated_at": "2026-07-15 00:15:41"
+    "updated_at": "2026-07-15 00:19:18"
 }
