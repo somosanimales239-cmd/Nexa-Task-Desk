@@ -1,0 +1,23 @@
+{
+  "productName": "Nexa Test Lab",
+  "version": "1.0.6",
+  "buildId": "source",
+  "githubRunId": "local",
+  "commitSha": "uncommitted",
+  "renderer": "resources/app.asar/test-lab/src/index.html",
+  "generatedAt": "2026-07-15T04:00:00.000Z",
+  "entries": {
+    "test-lab/main.js": {
+      "sha256": "5b659d1562ddf194ef8e8430fbb8a2d22d8507135806523f4a69ae01272cfda2"
+    },
+    "test-lab/preload.js": {
+      "sha256": "9176f5961869046f4bcbbc7a8630041da6330bc5838a99c6756a405233e846b2"
+    },
+    "test-lab/src/index.html": {
+      "sha256": "3b49f4311d6ca5f58c0a5870fba9e07145a5a9211b1402c542141e3e2066877b"
+    },
+    "test-lab/src/assets/js/app.js": {
+      "sha256": "02f5c54fa62704da4a9fab56bff5ac29a7f3bd0133f2904d708fa251dee1399e"
+    }
+  }
+}

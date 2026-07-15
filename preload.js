@@ -1,10 +1,12 @@
+'use strict';
+
 const { contextBridge } = require('electron');
 
-contextBridge.exposeInMainWorld('nexa', {
+contextBridge.exposeInMainWorld('nexaDelivery', Object.freeze({
+  product: 'Nexa Test Lab',
   platform: process.platform,
-  versions: Object.freeze({
-    node: process.versions.node,
-    chrome: process.versions.chrome,
+  runtime: Object.freeze({
     electron: process.versions.electron,
-  }),
-});
+    chrome: process.versions.chrome
+  })
+}));

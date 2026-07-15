@@ -1,31 +1,49 @@
 {
-  "name": "nexa-desktop-app",
-  "version": "1.0.0",
-  "description": "Desktop application managed by Nexa App Builder Pro",
-  "main": "main.js",
+  "name": "nexa-test-lab",
+  "version": "1.0.6",
+  "description": "Secure Windows artifact validation laboratory",
+  "main": "test-lab/main.js",
   "author": "Nexa App Builder Pro",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "validate": "node --check main.js && node --check preload.js && node --check src/app.js",
-    "build:win": "npm run validate && electron-builder --win nsis portable --publish never"
+    "manifest": "node scripts/create-build-manifest.js",
+    "validate:delivery": "node scripts/validate-delivery.js",
+    "ui:smoke": "electron test-lab/scripts/ui-smoke.js",
+    "test": "node --test test-lab/tests/*.test.js",
+    "validate": "npm run manifest && npm run validate:delivery && node test-lab/scripts/validate.js && npm test && npm run ui:smoke",
+    "build:win": "npm run validate && node scripts/build-windows.js",
+    "inspect:package": "node scripts/inspect-package.js"
   },
   "devDependencies": {
     "electron": "43.1.0",
     "electron-builder": "26.15.3"
   },
   "build": {
-    "appId": "com.nexa.desktopapp",
-    "productName": "Nexa Desktop App",
+    "appId": "com.nexa.testlab",
+    "productName": "Nexa Test Lab",
     "directories": {
       "output": "release"
     },
     "files": [
-      "main.js",
+      "package.json",
+      "nexa.project.json",
+      "nexa-build-manifest.json",
       "preload.js",
-      "src/**/*",
-      "package.json"
+      "src/index.html",
+      "test-lab/main.js",
+      "test-lab/preload.js",
+      "test-lab/core/**/*",
+      "test-lab/providers/**/*",
+      "test-lab/automation/**/*",
+      "test-lab/reports/**/*",
+      "test-lab/screenshots/**/*",
+      "test-lab/logs/**/*",
+      "test-lab/recordings/**/*",
+      "test-lab/config/**/*",
+      "test-lab/fixtures/**/*",
+      "test-lab/src/**/*"
     ],
     "win": {
       "target": [
@@ -48,11 +66,11 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Nexa Desktop App",
-      "artifactName": "${productName}-${version}-${arch}-Installer.${ext}"
+      "shortcutName": "Nexa Test Lab",
+      "artifactName": "${productName}-${version}-Build-${env.NEXA_BUILD_ID}-${arch}-Installer.${ext}"
     },
     "portable": {
-      "artifactName": "${productName}-${version}-${arch}-Portable.${ext}"
+      "artifactName": "${productName}-${version}-Build-${env.NEXA_BUILD_ID}-${arch}-Portable.${ext}"
     }
   }
 }

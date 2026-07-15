@@ -1,106 +1,152 @@
-name: Nexa Windows Build
+name: Nexa Test Lab Windows Build
 
 on:
   workflow_dispatch:
     inputs:
       nexa_version:
-        description: Nexa project version
+        description: Expected Nexa Test Lab version
         required: false
-        default: manual
+        default: "1.0.6"
       nexa_build_id:
         description: Nexa build record ID
         required: false
-        default: "0"
+        default: ""
 
 permissions:
   contents: read
 
 concurrency:
-  group: nexa-windows-${{ github.ref }}
+  group: nexa-test-lab-windows-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   validate-and-build:
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     env:
       CI: "true"
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
-      - name: Apply Nexa version
+      - name: Resolve immutable build metadata
         shell: pwsh
         run: |
-          $version = "${{ inputs.nexa_version }}"
-          if ($version -match "^\d+\.\d+\.\d+([+-][0-9A-Za-z.-]+)?$") {
-            npm version $version --no-git-tag-version --allow-same-version
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          $version = [string]$package.version
+          $expected = "${{ inputs.nexa_version }}"
+          if (-not [string]::IsNullOrWhiteSpace($expected) -and $expected -ne "manual" -and $expected -ne $version) {
+            throw "Requested version $expected does not match source version $version"
           }
+          $buildId = "${{ inputs.nexa_build_id }}"
+          if ([string]::IsNullOrWhiteSpace($buildId) -or $buildId -eq "0") { $buildId = "${{ github.run_number }}-${{ github.run_attempt }}" }
+          "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEXA_BUILD_ID=$buildId" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEXA_GITHUB_RUN_ID=${{ github.run_id }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "GITHUB_RUN_ID=${{ github.run_id }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Version: $version"
+          Write-Host "Build ID: $buildId"
+          Write-Host "Commit: $env:GITHUB_SHA"
 
-      - name: Install dependencies
-        shell: pwsh
-        run: |
-          if (Test-Path package-lock.json) {
-            npm ci
-          } else {
-            npm install
-          }
+      - name: Install locked dependencies
+        run: npm ci
 
-      - name: Validate source
+      - name: Generate build manifest
+        run: npm run manifest
+
+      - name: Validate active delivery graph and application
         run: npm run validate
 
-      - name: Build installer and portable app
-        run: npm run build:win
-
-      - name: Create Windows ZIP package
+      - name: Show source diff and reject whitespace errors
         shell: pwsh
         run: |
-          if (-not (Test-Path release\win-unpacked)) { throw "win-unpacked directory was not created" }
-          $package = Get-Content package.json -Raw | ConvertFrom-Json
-          $productName = [string]$package.build.productName
-          if ([string]::IsNullOrWhiteSpace($productName)) { $productName = [string]$package.name }
-          $safeName = ($productName -replace '[^0-9A-Za-z._-]+', '-').Trim('-')
-          $version = [string]$package.version
-          $zipPath = "release\$safeName-$version-x64-ZIP.zip"
+          git diff -- nexa-build-manifest.json
+          git diff --check
+
+      - name: Build Installer and Portable
+        run: node scripts/build-windows.js
+
+      - name: Inspect packaged ASAR and entry hashes
+        run: npm run inspect:package
+
+      - name: Create versioned Windows ZIP
+        shell: pwsh
+        run: |
+          if (-not (Test-Path release\win-unpacked\resources\app.asar)) { throw "Packaged app.asar was not created" }
+          $zipPath = "release\Nexa-Test-Lab-$env:APP_VERSION-Build-$env:NEXA_BUILD_ID-x64-ZIP.zip"
           Compress-Archive -Path release\win-unpacked\* -DestinationPath $zipPath -CompressionLevel Optimal -Force
-          if (-not (Test-Path $zipPath)) { throw "ZIP package was not created" }
+          if (-not (Test-Path $zipPath) -or (Get-Item $zipPath).Length -le 0) { throw "ZIP package was not created correctly" }
 
-      - name: Verify build output
+      - name: Verify final artifacts and metadata
         shell: pwsh
         run: |
-          if (-not (Test-Path release)) { throw "release directory was not created" }
-          $files = Get-ChildItem release -File -Recurse
-          if ($files.Count -eq 0) { throw "No build artifacts were generated" }
-          $files | Format-Table FullName, Length
+          $installer = Get-ChildItem release -Filter "Nexa Test Lab-$env:APP_VERSION-Build-$env:NEXA_BUILD_ID-*-Installer.exe" -File
+          $portable = Get-ChildItem release -Filter "Nexa Test Lab-$env:APP_VERSION-Build-$env:NEXA_BUILD_ID-*-Portable.exe" -File
+          $zip = Get-ChildItem release -Filter "Nexa-Test-Lab-$env:APP_VERSION-Build-$env:NEXA_BUILD_ID-*-ZIP.zip" -File
+          if (-not $installer -or ($installer | Where-Object Length -le 0)) { throw "Installer EXE is missing or empty" }
+          if (-not $portable -or ($portable | Where-Object Length -le 0)) { throw "Portable EXE is missing or empty" }
+          if (-not $zip -or ($zip | Where-Object Length -le 0)) { throw "ZIP is missing or empty" }
+          $manifest = Get-Content nexa-build-manifest.json -Raw | ConvertFrom-Json
+          if ($manifest.version -ne $env:APP_VERSION) { throw "Manifest version mismatch" }
+          if ([string]$manifest.buildId -ne $env:NEXA_BUILD_ID) { throw "Manifest Build ID mismatch" }
+          if ([string]$manifest.githubRunId -ne "${{ github.run_id }}") { throw "Manifest GitHub Run ID mismatch" }
+          if ([string]$manifest.commitSha -ne "${{ github.sha }}") { throw "Manifest commit mismatch" }
+          Write-Host "Renderer: resources/app.asar/test-lab/src/index.html"
+          Write-Host "Version: $env:APP_VERSION"
+          Write-Host "Build ID: $env:NEXA_BUILD_ID"
+          Write-Host "Commit: ${{ github.sha }}"
+          Get-ChildItem release -File | Format-Table Name, Length
 
-      - name: Upload Windows installer
+      - name: Upload Windows Installer
         uses: actions/upload-artifact@v4
         with:
-          name: Nexa-Installer-${{ inputs.nexa_version }}-Build-${{ inputs.nexa_build_id }}
+          name: Nexa-Test-Lab-${{ env.APP_VERSION }}-Build-${{ env.NEXA_BUILD_ID }}-Installer
           path: |
-            release/**/*-Installer.exe
-            release/**/*.blockmap
-            release/**/*.yml
+            release/*-Installer.exe
+            release/*.blockmap
+            nexa-build-manifest.json
+            release/build-inspection.json
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload portable Windows app
+      - name: Upload Windows Portable
         uses: actions/upload-artifact@v4
         with:
-          name: Nexa-Portable-${{ inputs.nexa_version }}-Build-${{ inputs.nexa_build_id }}
-          path: release/**/*-Portable.exe
+          name: Nexa-Test-Lab-${{ env.APP_VERSION }}-Build-${{ env.NEXA_BUILD_ID }}-Portable
+          path: |
+            release/*-Portable.exe
+            nexa-build-manifest.json
+            release/build-inspection.json
           if-no-files-found: error
           retention-days: 30
 
       - name: Upload Windows ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Nexa-ZIP-${{ inputs.nexa_version }}-Build-${{ inputs.nexa_build_id }}
-          path: release/**/*-ZIP.zip
+          name: Nexa-Test-Lab-${{ env.APP_VERSION }}-Build-${{ env.NEXA_BUILD_ID }}-ZIP
+          path: |
+            release/*-ZIP.zip
+            nexa-build-manifest.json
+            release/build-inspection.json
           if-no-files-found: error
           retention-days: 30
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-Test-Lab-${{ env.APP_VERSION }}-Build-${{ env.NEXA_BUILD_ID }}-Diagnostics
+          path: |
+            nexa-build-manifest.json
+            release/build-inspection.json
+            release/builder-debug.yml
+            release/builder-effective-config.yaml
+          if-no-files-found: ignore
+          retention-days: 14

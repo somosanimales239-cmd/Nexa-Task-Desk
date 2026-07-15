@@ -3,34 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:;">
-  <title>Nexa Desktop App</title>
-  <link rel="stylesheet" href="app.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Nexa Test Lab</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #07101f; color: #eaf2ff; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: linear-gradient(145deg, #07101f, #0a1425); }
+    main { width: min(680px, calc(100% - 32px)); padding: 32px; border: 1px solid #263753; border-radius: 18px; background: #0d182b; }
+    h1 { margin-top: 0; }
+    p { color: #aab9cf; line-height: 1.6; }
+    code { color: #9fc5ff; }
+  </style>
 </head>
 <body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
-  <main class="shell">
-    <header class="topbar">
-      <div class="brand"><span class="brand-mark">N</span><span>Nexa Desktop App</span></div>
-      <span class="status"><i></i> Ready</span>
-    </header>
-    <section class="hero">
-      <span class="eyebrow">BUILT WITH NEXA APP BUILDER PRO</span>
-      <h1>Your Windows application is ready to evolve.</h1>
-      <p>Describe the next feature in Nexa. The engineering agent will analyze, plan, modify, validate and compile it through GitHub Actions.</p>
-      <div class="actions">
-        <button id="checkButton" type="button">Run local check</button>
-        <span id="result" aria-live="polite"></span>
-      </div>
-    </section>
-    <section class="grid">
-      <article><span>01</span><h2>Secure foundation</h2><p>Context isolation, sandboxing and a restrictive content policy are enabled.</p></article>
-      <article><span>02</span><h2>Professional builds</h2><p>Installer, portable executable and ZIP targets are preconfigured.</p></article>
-      <article><span>03</span><h2>Version controlled</h2><p>Every change can be reviewed, compiled and rolled back through Nexa.</p></article>
-    </section>
-    <footer><span>Version 1.0.0</span><span id="runtime">Loading runtime…</span></footer>
+  <main>
+    <h1>Nexa Test Lab</h1>
+    <p>The active packaged renderer is <code>test-lab/src/index.html</code>.</p>
+    <p>This compatibility document is not the BrowserWindow entry point.</p>
   </main>
-  <script src="app.js"></script>
 </body>
 </html>
