@@ -55,9 +55,19 @@ jobs:
           Write-Host "Build ID: $buildId"
           Write-Host "Commit: $env:GITHUB_SHA"
 
+      - name: Resolve dependency lock
+        shell: pwsh
+        run: |
+          # NEXA_DEPENDENCY_LOCK_RECOVERY_V1
+          if (-not (Test-Path package.json)) { throw "package.json was not found" }
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          if (-not (Test-Path package-lock.json)) { throw "package-lock.json was not generated" }
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          $lock = Get-Content package-lock.json -Raw | ConvertFrom-Json
+          $root = ($lock.packages.PSObject.Properties | Where-Object { $_.Name -eq "" } | Select-Object -First 1).Value
+          if ($null -eq $root) { throw "package-lock.json has no root package record" }
       - name: Install locked dependencies
-        run: npm ci
-
+        run: npm ci --no-audit --no-fund
       - name: Generate build manifest
         run: npm run manifest
 
