@@ -51,13 +51,15 @@ async function run() {
       'reportList', 'settingsForm'
     ];
     const missingIds = requiredIds.filter(id => !document.getElementById(id));
-    const bodyText = document.body.innerText;
     const forbidden = ['Your Windows application is ready to evolve', 'Run local check'];
-    const forbiddenFound = forbidden.filter(text => bodyText.includes(text));
+    const forbiddenFound = forbidden.filter(text => document.body.innerText.includes(text));
     const navigation = {};
+    const activeViewText = {};
     for (const button of document.querySelectorAll('.nav button')) {
       button.click();
-      navigation[button.dataset.view] = Boolean(document.getElementById('view-' + button.dataset.view)?.classList.contains('active'));
+      const view = document.getElementById('view-' + button.dataset.view);
+      navigation[button.dataset.view] = Boolean(view?.classList.contains('active'));
+      activeViewText[button.dataset.view] = view?.innerText || '';
     }
     return {
       title: document.title,
@@ -66,7 +68,7 @@ async function run() {
       navigation,
       startInitiallyDisabled: document.getElementById('startTest').disabled,
       stopInitiallyDisabled: document.getElementById('stopTest').disabled,
-      text: bodyText
+      activeViewText
     };
   })()`, true);
 
@@ -75,7 +77,10 @@ async function run() {
   if (result.forbiddenFound.length) throw new Error(`Template content displayed: ${result.forbiddenFound.join(', ')}`);
   if (Object.values(result.navigation).some(value => !value)) throw new Error('One or more application sections cannot be activated');
   if (!result.startInitiallyDisabled || !result.stopInitiallyDisabled) throw new Error('Initial test control state is unsafe');
-  for (const name of expectedFunctions) if (!result.text.includes(name)) throw new Error(`Expected interface function is not visible: ${name}`);
+  const visibleSectionText = Object.values(result.activeViewText).join('\n');
+  for (const name of expectedFunctions) {
+    if (!visibleSectionText.includes(name)) throw new Error(`Expected interface function is not visible: ${name}`);
+  }
 
   console.log(JSON.stringify({
     renderer: 'test-lab/src/index.html',
