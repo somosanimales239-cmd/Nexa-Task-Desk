@@ -40,10 +40,30 @@ async function run() {
     }
   });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  const nexaSmokeDiagnostics = [];
+  const nexaRecordSmokeDiagnostic = (type, detail) => {
+    const value = typeof detail === 'string' ? detail : JSON.stringify(detail);
+    nexaSmokeDiagnostics.push(`${type}: ${value}`);
+  };
+  window.webContents.on('console-message', (...args) => {
+    const details = args[1];
+    const message = details && typeof details === 'object' && 'message' in details
+      ? details.message
+      : (args[2] || 'Unknown renderer console message');
+    nexaRecordSmokeDiagnostic('renderer-console', message);
+  });
+  window.webContents.on('preload-error', (_event, preloadPath, error) => {
+    nexaRecordSmokeDiagnostic('preload-error', `${preloadPath}: ${error?.stack || error?.message || error}`);
+  });
+  window.webContents.on('render-process-gone', (_event, details) => {
+    nexaRecordSmokeDiagnostic('render-process-gone', details || {});
+  }); /* NEXA_UI_SMOKE_DIAGNOSTICS_V1 */
   await window.loadFile(path.join(__dirname, '..', 'src', 'index.html'));
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  const result = await window.webContents.executeJavaScript(`(() => {
+  let result; /* NEXA_UI_SMOKE_PROBE_GUARD_V1 */
+  try {
+    result = await window.webContents.executeJavaScript(String.raw`(() => {
     const requiredIds = [
       'selectArtifact', 'artifactPath', 'artifactName', 'artifactSize', 'artifactSha',
       'artifactValidation', 'expectedSha', 'profile', 'environmentStatus', 'startTest',
@@ -79,6 +99,11 @@ activeViewText[button.dataset.view] = [nexaVisibleText, nexaSemanticContracts].f
       activeViewText
     };
   })()`, true);
+  } catch (error) {
+    console.error('Nexa renderer probe failed before assertions.');
+    for (const line of nexaSmokeDiagnostics) console.error(line);
+    throw error;
+  }
 
   if (result.title !== 'Nexa Test Lab') throw new Error(`Unexpected renderer title: ${result.title}`);
   if (result.missingIds.length) throw new Error(`Missing real UI controls: ${result.missingIds.join(', ')}`);
