@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const asar = require('@electron/asar');
+const asar = require('@electron/asar'); const nexaAsarPath = relativePath => process.platform === 'win32' ? relativePath.replaceAll('/', '\\') : relativePath; /* NEXA_ASAR_WINDOWS_PATH_COMPAT_V1 */
 
 const root = path.resolve(__dirname, '..');
 const asarPath = path.join(root, 'release', 'win-unpacked', 'resources', 'app.asar');
@@ -33,12 +33,12 @@ for (const relativePath of required) {
 }
 
 for (const [relativePath, expected] of Object.entries(manifest.entries)) {
-  const content = asar.extractFile(asarPath, relativePath);
+  const content = asar.extractFile(asarPath, nexaAsarPath(relativePath));
   const actual = crypto.createHash('sha256').update(content).digest('hex');
   if (actual !== expected.sha256) throw new Error(`Packaged hash mismatch: ${relativePath}`);
 }
 
-const activeHtml = asar.extractFile(asarPath, 'test-lab/src/index.html').toString('utf8');
+const activeHtml = asar.extractFile(asarPath, nexaAsarPath('test-lab/src/index.html')).toString('utf8');
 for (const text of ['Your Windows application is ready to evolve', 'Run local check', 'checkButton']) {
   if (activeHtml.includes(text)) throw new Error(`Template text exists in packaged renderer: ${text}`);
 }
