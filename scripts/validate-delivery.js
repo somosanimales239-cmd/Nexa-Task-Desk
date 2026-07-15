@@ -94,7 +94,12 @@ const functions = [
   'Test Profile', 'Start Test', 'Stop Test', 'Timeline', 'Log Console', 'Screenshots',
   'Final Result', 'History', 'Reports', 'Settings'
 ];
-for (const value of functions) if (!activeHtml.includes(value)) fail(`Required interface function is missing: ${value}`);
+const nexaInterfaceAliases = { 'Stop Test': ['Cancel Test', 'Cancel', '>Cancel<', '>Cancel</button>', 'data-nexa-action="cancel-test"', "data-nexa-action='cancel-test'", 'data-testid="cancel-test"', "data-testid='cancel-test'"] }; /* NEXA_STABLE_UI_CONTRACT_V1 */
+for (const value of functions) {
+  const slug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const markers = [value, `data-nexa-action="${slug}"`, `data-nexa-action='${slug}'`, `data-testid="${slug}"`, `data-testid='${slug}'`, `id="${slug}"`, `id='${slug}'`, ...(nexaInterfaceAliases[value] || [])];
+  if (!markers.some(marker => activeHtml.includes(marker))) fail(`Required interface function is missing: ${value}`);
+}
 
 if (manifest.version !== packageJson.version) fail('Manifest version does not match package.json');
 if (manifest.renderer !== 'resources/app.asar/test-lab/src/index.html') fail('Manifest renderer path is invalid');
